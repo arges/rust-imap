@@ -50,6 +50,16 @@ impl IMAPStream {
 		self.run_command_and_check_ok(&format!("LOGIN {} {}", username, password).to_string())
 	}
 
+	//NAMESPACE
+	pub fn namespace(&mut self) -> Result<Vec<String>> {
+		self.run_command(&format!("NAMESPACE").to_string())
+	}
+
+	//LIST
+	pub fn list(&mut self, mailbox_name: &str) -> Result<Vec<String>> {
+		self.run_command(&format!("LIST {}", mailbox_name).to_string())
+	}
+
 	//SELECT
 	pub fn select(&mut self, mailbox_name: &str) -> Result<IMAPMailbox> {
 		match self.run_command(&format!("SELECT {}", mailbox_name).to_string()) {
