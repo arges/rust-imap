@@ -5,13 +5,18 @@ use openssl::ssl::{SslContext, SslMethod};
 use imap::client::IMAPStream;
 use imap::client::IMAPMailbox;
 
+const IMAP_SERVER: &'static str = "imap.gmail.com";
+const IMAP_PORT: u16 = 993;
+const IMAP_USER: &'static str = "username"
+const IMAP_PASS: &'static str = "password";
+
 fn main() {
-	let mut imap_socket = match IMAPStream::connect("imap.gmail.com", 993, Some(SslContext::new(SslMethod::Sslv23).unwrap())) {
+	let mut imap_socket = match IMAPStream::connect(IMAP_SERVER, IMAP_PORT, Some(SslContext::new(SslMethod::Sslv23).unwrap())) {
 		Ok(s) => s,
 		Err(e) => panic!("{}", e)
 	};
 
-	if let Err(e) = imap_socket.login("username", "password") {
+	if let Err(e) = imap_socket.login(IMAP_USER, IMAP_PASS) {
 		println!("Error: {}", e)
 	};
 		
@@ -29,6 +34,24 @@ fn main() {
 			println!("flags: {}, exists: {}, recent: {}, unseen: {:?}, parmanent_flags: {:?}, uid_next: {:?}, uid_validity: {:?}", flags, exists, recent, unseen, permanent_flags, uid_next, uid_validity);
 		},
 		Err(_) => println!("Error selecting INBOX")
+	};
+
+	match imap_socket.namespace() {
+		Ok(lines) => {
+			for line in lines.iter() {
+				print!("{}", line);
+			}
+		},
+		Err(_) => println!("Error reading namespace.")
+	};
+
+	match imap_socket.list("\"\" \"%\"") {
+		Ok(lines) => {
+			for line in lines.iter() {
+				print!("{}", line);
+			}
+		},
+		Err(_) => println!("Error listing folders.")
 	};
 
 	match imap_socket.fetch("2", "body[text]") {
